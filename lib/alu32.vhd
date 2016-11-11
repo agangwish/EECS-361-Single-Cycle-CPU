@@ -1,0 +1,330 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use work.eecs361.all;
+use work.eecs361_gates.all;
+
+-- FULL ADDER -------------------------------------------------------
+entity full_adder is 
+	port(a, b, carryin : in std_logic;
+		sum, carryout : out std_logic);
+end full_adder;
+
+architecture structure of full_adder is
+
+signal int1, int2, int3, int4, int5, int6, int7, int8, int9, int10, int11, int12, int13, int14, int15, int16 : std_logic;
+
+begin
+	C1: or_gate port map (b, carryin, int1); -- int1 = b or carryin
+	C2: or_gate port map (a, carryin, int2); -- int2 = a or carryin
+	C3: or_gate port map (a, b, int3); -- int3 = a or b
+	C4: and_gate port map (int1, int2, int4); -- int4 = (a or carryin) and (b or carryin)
+	C5: and_gate port map (int3, int4, carryout); -- carryout = (a or carryin) and (b or carryin) and (a or b)
+	S1: xor_gate port map (a, b, int5); -- int5 = a xor b
+	S2: xor_gate port map (int5, carryin, sum); -- sum = (a xor b) xor carryin
+end structure;
+
+
+library ieee;
+use ieee.std_logic_1164.all;
+use work.eecs361.all;
+use work.eecs361_gates.all;
+
+-- ONE BIT ALU -----------------------------------------------------------
+entity alu_1 is 
+	port (a, b, carryin, less : in std_logic;
+		op : in std_logic_vector(5 downto 0);
+		result, carryout : out std_logic);
+end alu_1;
+
+architecture structure of alu_1 is
+
+component full_adder
+	port(
+		a : in std_logic;
+		b : in std_logic;
+		carryin : in std_logic;
+		sum : out std_logic;
+		carryout : out std_logic
+		);
+end component full_adder;
+
+signal int1, int2, int3, int4, int5, int6, int7, int8 : std_logic;
+
+begin
+	A1: or_gate port map (a, b, int1); -- int1 = a or b
+	A2: and_gate port map (a, b, int2); -- int2 = a and b
+	A4: xor_gate port map (a, b, int3); -- int3 = a xor b
+	A5: full_adder port map (a, b, carryin, int4, carryout); -- int4 = a+b
+	A6: mux port map (op(1), int2, int3, int5); -- int5 = and/xor
+	A7: mux port map (op(0), int5, int1, int6); -- int6 = and/xor/or
+	A8: mux port map (op(2), int4, int6, int7); 
+	A9: mux port map (op(0), less, less, int8); -- int7 = slt/sltu
+	A10: mux port map (op(3), int7, int8, result);
+
+end structure;
+
+library ieee;
+use ieee.std_logic_1164.all;
+use work.eecs361.all;
+use work.eecs361_gates.all;
+
+-- ONE BIT ALU FOR MSB --------------------------------------------------
+entity alu_2 is 
+	port (a, b, carryin, less : in std_logic;
+		op : in std_logic_vector(5 downto 0);
+		result, carryout, set, overflow : out std_logic);
+end alu_2;
+
+architecture structure of alu_2 is
+
+component full_adder
+	port(
+		a : in std_logic;
+		b : in std_logic;
+		carryin : in std_logic;
+		sum : out std_logic;
+		carryout : out std_logic
+		);
+end component full_adder;
+
+signal int1, int2, int3, int4, int5, int6, int7, int8, int9, carryout_temp : std_logic;
+
+begin
+	A1: or_gate port map (a, b, int1); -- int1 = a or b
+	A2: and_gate port map (a, b, int2); -- int2 = a and b
+	A4: xor_gate port map (a, b, int3); -- int3 = a xor b
+	A5: full_adder port map (a, b, carryin, int4, carryout_temp); -- int4 = a+b
+	A6: xor_gate port map ('1', carryout_temp, int5); -- int5 = 1 xor carryout (for sltu)
+	A7: mux port map (op(0), int4, int5, int6); 
+	A8: set <= int6; -- adder output/carryout xor 1 to set
+	A9: mux port map (op(1), int2, int3, int7); -- int7 = and/xor
+	A10: mux port map (op(0), int7, int1, int8); -- int8 = and/xor/or
+	A11: mux port map (op(2), int6, int8, int9); -- int9 = a/xor/or/add
+	A13: mux port map (op(3), int9, less, result); -- result = a/xor/or/add/slt/sltu
+	A14: xor_gate port map (carryin, carryout_temp, overflow);
+	A15: carryout <= carryout_temp;
+
+end structure;
+
+library ieee;
+use ieee.std_logic_1164.all;
+use work.eecs361.all;
+use work.eecs361_gates.all;
+
+-- LOGICAL SHIFT UNIT ----------------------------------------------------------------
+entity shifter is 
+	port ( a : in std_logic_vector (31 downto 0);
+		b : in std_logic_vector (4 downto 0);
+		direction : in std_logic;
+		result : out std_logic_vector (31 downto 0)
+		);
+end shifter;
+
+architecture structure of shifter is
+	
+component shifter 
+	port(
+		a : in std_logic_vector (31 downto 0);
+		b : in std_logic_vector (4 downto 0);
+		direction : in std_logic;
+		result : out std_logic_vector (31 downto 0)
+		);
+end component shifter;
+
+signal int1 : std_logic;
+signal mux_out1, mux_out2, mux_out3, mux_out4, mux_out5, mux_out6, mux_out7, mux_out8, mux_out9, mux_out10: std_logic_vector (31 downto 0);
+
+begin
+
+	L1: for i in 0 to 31 generate
+		LSB: if i = 0 generate
+			mux0: mux port map (b(0), a(0), '0', mux_out1(0));
+		end generate LSB;
+		other_bits: if i > 0 generate 
+			mux1: mux port map (b(0), a(i), a(i-1), mux_out1(i));
+		end generate other_bits;
+	end generate L1;
+
+	L2: for i in 0 to 31 generate
+		LSB2: if i < 2 generate
+			mux2: mux port map (b(1), mux_out1(i), '0', mux_out2(i));
+		end generate LSB2;
+		other_bits2: if i >= 2 generate
+			mux3: mux port map (b(1), mux_out1(i), mux_out1(i-2), mux_out2(i));
+		end generate other_bits2;
+	end generate L2;
+
+	L3: for i in 0 to 31 generate
+		LSB3: if i < 4 generate
+			mux4: mux port map (b(2), mux_out2(i), '0', mux_out3(i));
+		end generate LSB3;
+		other_bits3: if i >= 4 generate
+			mux5: mux port map (b(2), mux_out2(i), mux_out2(i-4), mux_out3(i));
+		end generate other_bits3;
+	end generate L3;
+
+	L4: for i in 0 to 31 generate
+		LSB4: if i < 8 generate
+			mux6: mux port map (b(3), mux_out3(i), '0', mux_out4(i));
+		end generate LSB4;
+		other_bits4: if i >= 8 generate
+			mux7: mux port map (b(3), mux_out3(i), mux_out3(i-8), mux_out4(i));
+		end generate other_bits4;
+	end generate L4;
+
+	L5: for i in 0 to 31 generate
+		LSB5: if i < 16 generate
+			mux8: mux port map (b(4), mux_out4(i), '0', mux_out5(i));
+		end generate LSB5;
+		other_bits5: if i >= 16 generate
+			mux9: mux port map (b(4), mux_out4(i), mux_out4(i-16), mux_out5(i));
+		end generate other_bits5;
+	end generate L5;
+-- RIGHT BARREL SHIFTER -------------------------------------------------------------
+	R1: for i in 0 to 31 generate
+		lower_bits1: if i < 16 generate
+			mux10: mux port map (b(4), a(i), a(i+16), mux_out6(i));
+		end generate lower_bits1;
+		MSB1: if i >= 16 generate
+			mux11: mux port map (b(4), a(i), '0', mux_out6(i));
+		end generate MSB1;
+	end generate R1;
+
+	R2: for i in 0 to 31 generate
+		lower_bits2: if i < 24 generate
+			mux12: mux port map (b(3), mux_out6(i), mux_out6(i+8), mux_out7(i));
+		end generate lower_bits2;
+		MSB2: if i >= 24 generate
+			mux13: mux port map (b(3), mux_out6(i), '0', mux_out7(i));
+		end generate MSB2;
+	end generate R2;
+
+	R3: for i in 0 to 31 generate
+		lower_bits3: if i < 28 generate
+			mux14: mux port map (b(2), mux_out7(i), mux_out7(i+4), mux_out8(i));
+		end generate lower_bits3;
+		MSB3: if i >= 28 generate
+			mux15: mux port map (b(2), mux_out7(i), '0', mux_out8(i));
+		end generate MSB3;
+	end generate R3;
+
+	R4: for i in 0 to 31 generate
+		lower_bits4: if i < 30 generate
+			mux16: mux port map (b(1), mux_out8(i), mux_out8(i+2), mux_out9(i));
+		end generate lower_bits4;
+		MSB4: if i >= 30 generate
+			mux17: mux port map (b(1), mux_out8(i), '0', mux_out9(i));
+		end generate MSB4;
+	end generate R4;
+
+	R5: for i in 0 to 31 generate
+		lower_bits5: if i < 31 generate
+			mux18: mux port map (b(0), mux_out9(i), mux_out9(i+1), mux_out10(i));
+		end generate lower_bits5;
+		MSB5: if i >= 31 generate
+			mux19: mux port map (b(0), mux_out9(i), '0', mux_out10(i));
+		end generate MSB5;
+	end generate R5;
+
+	S1: mux_32 port map (direction, mux_out5, mux_out10, result);
+end structure;
+
+
+library ieee;
+use ieee.std_logic_1164.all;
+use work.eecs361.all;
+use work.eecs361_gates.all;
+
+-- 32 BIT ALU -------------------------------------------------------------------------
+entity alu_32 is 
+	port (a, b : in std_logic_vector(31 downto 0);
+		op : in std_logic_vector(5 downto 0);
+		result : out std_logic_vector(31 downto 0);
+		carryout : out std_logic;
+		overflow : out std_logic;
+		zero : out std_logic
+		);
+end alu_32;
+
+architecture structure of alu_32 is
+
+component alu_1
+	port(
+		a : in std_logic;
+		b : in std_logic;
+		carryin : in std_logic;
+		less : in std_logic;
+		op : in std_logic_vector(5 downto 0);
+		result : out std_logic;
+		carryout : out std_logic
+		);
+end component alu_1;
+
+component alu_2
+	port(
+		a : in std_logic;
+		b : in std_logic;
+		carryin : in std_logic;
+		less : in std_logic;
+		op : in std_logic_vector(5 downto 0);
+		result : out std_logic;
+		carryout : out std_logic;
+		set : out std_logic;
+		overflow : out std_logic
+		);
+end component alu_2;
+
+component shifter 
+	port(
+		a : in std_logic_vector (31 downto 0);
+		b : in std_logic_vector (4 downto 0);
+		direction : in std_logic;
+		result : out std_logic_vector (31 downto 0)
+		);
+end component shifter;
+
+signal int1, int2, int3, int4, b_negate, set, o1, o2, o3 : std_logic;
+signal c, b_inv, b_input, result_temp, a_shift : std_logic_vector(31 downto 0);
+signal z1 : std_logic_vector(15 downto 0);
+signal z2 : std_logic_vector(7 downto 0);
+signal z3 : std_logic_vector(3 downto 0);
+
+begin
+
+	B1: not_gate port map(op(2), int1);
+	B2: and_gate port map(op(5), op(1), int2);
+	B3: and_gate port map(int1, int2, b_negate);
+	B4: not_gate_32 port map(b, b_inv);
+	B5: mux_32 port map (b_negate, b, b_inv, b_input); -- selects between b and b's inverse
+
+	S1: shifter port map (a, b(4 downto 0), op(1), a_shift);
+
+	A1: for i in 0 to 31 generate
+		LSB: if i = 0 generate
+			alu1: alu_1 port map (a(0), b_input(0), b_negate, set, op, result_temp(0), c(0));
+		end generate LSB;
+		UPPER_BITS: if i > 0 and i < 31 generate
+			alu2: alu_1 port map (a(i), b_input(i), c(i-1), '0', op, result_temp(i), c(i));
+		end generate UPPER_BITS;
+		MSB: if i = 31 generate
+			alu3: alu_2 port map (a(31), b_input(31), c(30), '0', op, result_temp(31), carryout, set, overflow);
+		end generate MSB;
+	end generate A1;
+
+	ZERO1: for i in 0 to 15 generate
+		zero_check: or_gate port map (result_temp(i), result_temp(31-i), z1(i));
+	end generate ZERO1;
+	ZERO2: for i in 0 to 7 generate
+		zero_check2: or_gate port map (z1(i), z1(15-i), z2(i));
+	end generate ZERO2;
+	ZERO3: for i in 0 to 3 generate
+		zero_check3: or_gate port map (z2(i), z2(7-i), z3(i));
+	end generate ZERO3;
+	ZERO4: or_gate port map (z3(0), z3(3), o1);
+	ZERO5: or_gate port map (z3(1), z3(2), o2);
+	ZERO6: or_gate port map (o1, o2, o3);
+	ZERO7: not_gate port map (o3, zero);
+
+	R1: mux_32 port map (op(5), a_shift, result_temp, result);
+
+end structure;
