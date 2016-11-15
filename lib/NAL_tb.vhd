@@ -26,6 +26,13 @@ testbench : process begin
 pc_in_tb <= X"00400020";
 instruction_tb <= X"20050001";
 wait for 1 ns;
+instruction_tb <= X"20050002";
+wait for 1 ns;
+instruction_tb <= X"2005ffff";
+wait for 1 ns;
+instruction_tb <= X"2005fffe";
+wait for 1 ns;
+
 
 end process;
 end behav;
