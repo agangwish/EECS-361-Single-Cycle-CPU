@@ -102,7 +102,7 @@ begin
 	A11: mux port map (op(2), int6, int8, int9); -- int9 = a/xor/or/add
 	A13: mux port map (op(3), int9, less, result); -- result = a/xor/or/add/slt/sltu
 	A14: xor_gate port map (carryin, carryout_temp, int10);
-	A15: mux port map (op(0), int10, carryout_temp, overflow);
+	A15: mux port map (op(0), int10, carryout_temp);
 	A16: carryout <= carryout_temp;
 
 end structure;

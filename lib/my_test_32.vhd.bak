@@ -234,6 +234,24 @@ begin
 	assert overflow = '1' report "addu02" severity error;
 	wait for 5 ns;
 
+	a <= "11111111111111111111111111111111";
+	b <= "11111111111111111111111111111111";
+	op <= "100010";
+	wait for 5 ns;
+	assert result = "00000000000000000000000000000000" report "SUBU1" severity error;
+	assert carryout = '1' report "subuc1" severity error;
+	assert overflow = '1' report "subu01" severity error;
+	wait for 5 ns;
+
+	a <= "11111111111111111111111111111111";
+	b <= "11111111111111111111111111111111";
+	op <= "100011";
+	wait for 5 ns;
+	assert result = "00000000000000000000000000000000" report "SUBU2" severity error;
+	assert carryout = '0' report "subuc2" severity error;
+	assert overflow = '0' report "subu02" severity error;
+	wait for 5 ns;
+
 	
 	wait;
   end process;
