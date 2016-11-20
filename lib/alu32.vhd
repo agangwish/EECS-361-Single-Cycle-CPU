@@ -240,6 +240,7 @@ use work.eecs361_gates.all;
 entity alu_32 is 
 	port (a, b : in std_logic_vector(31 downto 0);
 		op : in std_logic_vector(5 downto 0);
+		shamt : in std_logic_vector(4 downto 0);
 		result : out std_logic_vector(31 downto 0);
 		carryout : out std_logic;
 		overflow : out std_logic;
@@ -298,7 +299,7 @@ begin
 	B4: not_gate_32 port map(b, b_inv);
 	B5: mux_32 port map (b_negate, b, b_inv, b_input); -- selects between b and b's inverse
 
-	S1: shifter port map (a, b(4 downto 0), op(1), a_shift);
+	S1: shifter port map (a, shamt, op(1), a_shift);
 
 	A1: for i in 0 to 31 generate
 		LSB: if i = 0 generate
