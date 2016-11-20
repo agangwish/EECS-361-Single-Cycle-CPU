@@ -9,6 +9,7 @@ architecture behavioral of my_test_32 is
 signal a : std_logic_vector(31 downto 0);
 signal b : std_logic_vector(31 downto 0);
 signal op : std_logic_vector(5 downto 0);
+signal shamt : std_logic_vector(4 downto 0);
 signal result : std_logic_vector(31 downto 0);
 signal carryout : std_logic;
 signal overflow : std_logic;
@@ -20,6 +21,7 @@ begin
 		a => a,
 		b => b,
 		op => op,
+		shamt => shamt,
 		result => result,
 		carryout => carryout,
 		overflow => overflow,
@@ -29,6 +31,7 @@ begin
   begin
 	a <= "01010101010101010101010101010101";
 	b <= "00110011001100110011001100110011";
+	shamt <= "00000";
 	op <= "100000";
 	wait for 5 ns;
 	assert result = "10001000100010001000100010001000" report "ADDITION 1" severity error;
@@ -140,6 +143,7 @@ begin
 
 	a <= "11111111111111111111111111111111";
 	b <= "00000000000000000000000000000010";
+	shamt <= "00010";
 	op <= "000010";
 	wait for 5 ns;
 	assert result = "00111111111111111111111111111111" report "SRL1" severity error;
@@ -148,6 +152,7 @@ begin
 	a <= "01100011011000100110011010110001";
 	b <= "00000000000000000000000000000101";
 	op <= "000010";
+	shamt <= "00101";
 	wait for 5 ns;
 	assert result = "00000011000110110001001100110101" report "SRL2" severity error;
 	wait for 5 ns;
@@ -155,26 +160,27 @@ begin
 	a <= "11111111111111111111111111111111";
 	b <= "00000000000000000000000000011111";
 	op <= "000010";
+	shamt <= "11111";
 	wait for 5 ns;
 	assert result = "00000000000000000000000000000001" report "SRL3" severity error;
 	wait for 5 ns;
 
 	a <= "00111111111111111111111111111111";
-	b <= "00000000000000000000000000000010";
+	shamt <= "00010";
 	op <= "000000";
 	wait for 5 ns;
 	assert result = "11111111111111111111111111111100" report "SLL1" severity error;
 	wait for 5 ns;
 
 	a <= "01100011011000100110011010110001";
-	b <= "00000000000000000000000000000101";
+	shamt <= "00101";
 	op <= "000000";
 	wait for 5 ns;
 	assert result = "01101100010011001101011000100000" report "SLL2" severity error;
 	wait for 5 ns;
 
 	a <= "11111111111111111111111111111111";
-	b <= "00000000000000000000000000011111";
+	shamt <= "11111";
 	op <= "000000";
 	wait for 5 ns;
 	assert result = "10000000000000000000000000000000" report "SLL3" severity error;
@@ -214,8 +220,31 @@ begin
 	wait for 5 ns;
 	assert result = "00000000000000000000000000000001" report "SLTU2" severity error;
 	wait for 5 ns;
+	
 
+	a <= "11111111111111111111111111111111";
+	b <= "00000000000000000000000000000001";
+	op <= "100000";
+	wait for 5 ns;
+	assert result = "00000000000000000000000000000000" report "ADDU1" severity error;
+	assert carryout = '1' report "adduc1" severity error;
+	assert overflow = '0' report "addu01" severity error;
+	wait for 5 ns;
 
+	a <= "11111111111111111111111111111111";
+	b <= "00000000000000000000000000000001";
+	op <= "100001";
+	wait for 5 ns;
+	assert result = "00000000000000000000000000000000" report "ADDU2" severity error;
+	assert carryout = '1' report "adduc2" severity error;
+	assert overflow = '1' report "addu02" severity error;
+	wait for 5 ns;
+
+	a <= "00000000000000000000000000000010";
+	b <= "00000000000000000000000000000011";
+	op <= "100010";
+	wait for 5 ns;
+	wait for 5 ns;
 
 	
 	wait;
