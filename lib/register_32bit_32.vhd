@@ -50,6 +50,7 @@ signal reg_out : vector_array;
 begin
 
 
+
 C0: dec_32 port map (rw, decoder_out);
 
 G0: for i in 0 to 31 generate begin
@@ -60,13 +61,13 @@ C1: register_32bit port map (clk, and_out(i), busw, reg_out(i));
 
 end generate;
 
-C2: mux32_32_1 port map (ra, reg_out(0), reg_out(1), reg_out(2), reg_out(3), reg_out(4), reg_out(5),
+C2: mux32_32_1 port map (ra, X"00000000", reg_out(1), reg_out(2), reg_out(3), reg_out(4), reg_out(5),
 reg_out(6), reg_out(7), reg_out(8), reg_out(9), reg_out(10), reg_out(11), reg_out(12), reg_out(13), reg_out(14), reg_out(15),
 reg_out(16), reg_out(17), reg_out(18), reg_out(19), reg_out(20), reg_out(21), reg_out(22), reg_out(23), reg_out(24), 
 reg_out(25), reg_out(26), reg_out(27), reg_out(28), reg_out(29), reg_out(30), reg_out(31),
 busa);
 
-C3: mux32_32_1 port map (rb, reg_out(0), reg_out(1), reg_out(2), reg_out(3), reg_out(4), reg_out(5),
+C3: mux32_32_1 port map (rb, X"00000000", reg_out(1), reg_out(2), reg_out(3), reg_out(4), reg_out(5),
 reg_out(6), reg_out(7), reg_out(8), reg_out(9), reg_out(10), reg_out(11), reg_out(12), reg_out(13), reg_out(14), reg_out(15),
 reg_out(16), reg_out(17), reg_out(18), reg_out(19), reg_out(20), reg_out(21), reg_out(22), reg_out(23), reg_out(24), 
 reg_out(25), reg_out(26), reg_out(27), reg_out(28), reg_out(29), reg_out(30), reg_out(31),

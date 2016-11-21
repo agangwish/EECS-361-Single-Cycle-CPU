@@ -6,7 +6,8 @@ use work.eecs361_gates.all;
 entity NAL is
 port(pc_in, instruction : in std_logic_vector (31 downto 0);
 zero, carryout : in std_logic;
-pc_out: out std_logic_vector (31 downto 0));
+pc_out: out std_logic_vector (31 downto 0);
+pc_init : in std_logic);
 end entity;
 
 
@@ -21,6 +22,7 @@ end component;
 component alu_32 is 
 	port (a, b : in std_logic_vector(31 downto 0);
 		op : in std_logic_vector(5 downto 0);
+		shamt: in std_logic_vector (4 downto 0);
 		result : out std_logic_vector(31 downto 0);
 		carryout : out std_logic;
 		overflow : out std_logic;
@@ -71,7 +73,7 @@ end component;
 signal op_add:  std_logic_vector (5 downto 0);
 signal branch : std_logic;
 signal address_out, address_temp: std_logic_vector (31 downto 0);
-signal pc_branch_temp, pc_branch, pc_four, pc_four1, pc_out_temp : std_logic_vector(31 downto 0);
+signal pc_branch_temp, pc_branch, pc_four, pc_four1, pc_out_temp, pc_out_temp1 : std_logic_vector(31 downto 0);
 signal sel : std_logic_vector (1 downto 0);
 signal bgtz, bne, beq : std_logic;
 signal beq_temp, bne_temp, bgtz_temp : std_logic_vector (2 downto 0);
@@ -103,10 +105,10 @@ end generate;
 S0: shifter port map(address_temp, "00010", '0', address_out); -- address*4
 
 
-C0: alu_32 port map(pc_in, x"00000004", op_add, pc_four);  -- PC <= PC + 4
+C0: alu_32 port map(pc_in, x"00000004", op_add, "00000", pc_four);  -- PC <= PC + 4
 pc_four1 <= pc_four;
-C2: alu_32 port map(pc_in, x"00000004", op_add, pc_branch_temp); -- 1. PC_Branch <= PC + 4
-C1: alu_32 port map(pc_branch_temp, address_out , op_add, pc_branch);  -- 2. PC <= PC + 4+  (ADDRESS*4)
+C2: alu_32 port map(pc_in, x"00000004", op_add, "00000", pc_branch_temp); -- 1. PC_Branch <= PC + 4
+C1: alu_32 port map(pc_branch_temp, address_out , op_add, "00000", pc_branch);  -- 2. PC <= PC + 4+  (ADDRESS*4)
 
 sel(0) <= zero;
 sel(1) <= carryout;
@@ -128,7 +130,10 @@ M2: mux_32 port map(bgtz, pc_four, pc_branch, mux_out1 );
 
 C3: mux32_4_1 port map(sel, mux_out, pc_four1, mux_out1, mux_out2, pc_out_temp);
 branch <= instruction(28);
-C4: mux_32 port map(branch, pc_four, pc_out_temp, pc_out);
+
+C4: mux_32 port map(branch, pc_four, pc_out_temp, pc_out_temp1);
+
+C5: mux_32 port map(pc_init, pc_out_temp1, X"00400020", pc_out);
 
 
 end struct;
